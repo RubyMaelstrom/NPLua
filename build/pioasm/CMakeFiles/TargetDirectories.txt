@@ -1,0 +1,7 @@
+/home/ruby/Documents/Coding/PicoProj/NPLua/build/pioasm/CMakeFiles/pioasm.dir
+/home/ruby/Documents/Coding/PicoProj/NPLua/build/pioasm/CMakeFiles/edit_cache.dir
+/home/ruby/Documents/Coding/PicoProj/NPLua/build/pioasm/CMakeFiles/rebuild_cache.dir
+/home/ruby/Documents/Coding/PicoProj/NPLua/build/pioasm/CMakeFiles/list_install_components.dir
+/home/ruby/Documents/Coding/PicoProj/NPLua/build/pioasm/CMakeFiles/install.dir
+/home/ruby/Documents/Coding/PicoProj/NPLua/build/pioasm/CMakeFiles/install/local.dir
+/home/ruby/Documents/Coding/PicoProj/NPLua/build/pioasm/CMakeFiles/install/strip.dir

@@ -1,0 +1,41 @@
+lua/CMakeFiles/lua.dir/lmathlib.c.o: \
+ /home/ruby/Documents/Coding/PicoProj/NPLua/lua/lmathlib.c \
+ /home/ruby/Documents/Coding/PicoProj/NPLua/lua/lprefix.h \
+ /usr/lib/gcc/arm-none-eabi/14.2.0/include/float.h \
+ /usr/lib/gcc/arm-none-eabi/14.2.0/include/limits.h \
+ /usr/lib/gcc/arm-none-eabi/14.2.0/include/syslimits.h \
+ /usr/arm-none-eabi/include/limits.h /usr/arm-none-eabi/include/newlib.h \
+ /usr/arm-none-eabi/include/_newlib_version.h \
+ /usr/arm-none-eabi/include/sys/cdefs.h \
+ /usr/arm-none-eabi/include/machine/_default_types.h \
+ /usr/arm-none-eabi/include/sys/features.h \
+ /usr/lib/gcc/arm-none-eabi/14.2.0/include/stddef.h \
+ /usr/arm-none-eabi/include/sys/syslimits.h \
+ /usr/arm-none-eabi/include/math.h /usr/arm-none-eabi/include/sys/reent.h \
+ /usr/arm-none-eabi/include/_ansi.h \
+ /usr/arm-none-eabi/include/sys/config.h \
+ /usr/arm-none-eabi/include/machine/ieeefp.h \
+ /usr/arm-none-eabi/include/sys/_types.h \
+ /usr/arm-none-eabi/include/machine/_types.h \
+ /usr/arm-none-eabi/include/sys/lock.h /usr/arm-none-eabi/include/_ansi.h \
+ /usr/arm-none-eabi/include/stdlib.h \
+ /usr/arm-none-eabi/include/machine/stdlib.h \
+ /usr/arm-none-eabi/include/alloca.h /usr/arm-none-eabi/include/time.h \
+ /usr/arm-none-eabi/include/machine/time.h \
+ /usr/arm-none-eabi/include/sys/types.h \
+ /usr/arm-none-eabi/include/sys/_stdint.h \
+ /usr/arm-none-eabi/include/sys/_pthreadtypes.h \
+ /usr/arm-none-eabi/include/sys/sched.h \
+ /usr/arm-none-eabi/include/sys/_timespec.h \
+ /usr/arm-none-eabi/include/machine/types.h \
+ /usr/arm-none-eabi/include/sys/timespec.h \
+ /home/ruby/Documents/Coding/PicoProj/NPLua/lua/lua.h \
+ /usr/lib/gcc/arm-none-eabi/14.2.0/include/stdarg.h \
+ /home/ruby/Documents/Coding/PicoProj/NPLua/lua/luaconf.h \
+ /usr/lib/gcc/arm-none-eabi/14.2.0/include/stdint.h \
+ /usr/arm-none-eabi/include/stdint.h \
+ /usr/arm-none-eabi/include/sys/_intsup.h \
+ /home/ruby/Documents/Coding/PicoProj/NPLua/lua/lauxlib.h \
+ /usr/arm-none-eabi/include/stdio.h \
+ /usr/arm-none-eabi/include/sys/stdio.h \
+ /home/ruby/Documents/Coding/PicoProj/NPLua/lua/lualib.h

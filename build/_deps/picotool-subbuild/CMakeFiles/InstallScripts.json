@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/ruby/Documents/Coding/PicoProj/NPLua/build/_deps/picotool-subbuild/cmake_install.cmake"
+	],
+	"Parallel" : false
+}
