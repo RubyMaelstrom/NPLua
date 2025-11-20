@@ -29,7 +29,7 @@ As previously mentioned, there's also a `reboot` command, which will restart the
 ### Compatibility
 The Pi Pico 2W is a great little device, but it doesn't have an operating system. Thus, standard Lua functions like `os.execute` and `os.exit` will not function in NPLua. Most other standard functions are supported. Try things out! That's one of the fun things about NPLua, you can play around with things without a bunch of reflashing of the hardware. There are also a couple of custom features implemented. `led(bool)` will turn the led on (true) or off (false). `sleep(number)` will initiate a sleep state for the entered number of seconds.
 
-There's also a full suite of GPIO functions. `gpio.setMode(pin, number)` will initialize the pin as input or output (0 for input, 1 for output). `gpio.write(pin, bool)` will turn a particular pin on or off. `gpio.read(pin, bool)` will, you guessed it, read in a pin is on or off. `gpio.toggle(pin)` will toggle the state of a pin.
+There's also a full suite of GPIO functions. `gpio.setMode(pin, number)` will initialize the pin as input or output (0 for input, 1 for output). `gpio.write(pin, bool)` will turn a particular pin on or off. `gpio.read(pin, bool)` will, you guessed it, read if a pin is on or off. `gpio.toggle(pin)` will toggle the state of a pin.
 
 ### Bugs
 Have you found a bug in NPLua? I'm not surprised, I'm sure there are plenty! Let me know, and I'll try to fix it.
