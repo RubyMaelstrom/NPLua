@@ -1,3 +1,0 @@
-/home/ruby/Documents/Coding/PicoProj/NPLua/build/_deps/picotool-subbuild/CMakeFiles/picotool-populate.dir
-/home/ruby/Documents/Coding/PicoProj/NPLua/build/_deps/picotool-subbuild/CMakeFiles/edit_cache.dir
-/home/ruby/Documents/Coding/PicoProj/NPLua/build/_deps/picotool-subbuild/CMakeFiles/rebuild_cache.dir

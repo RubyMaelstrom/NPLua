@@ -1,7 +1,0 @@
-{
-	"InstallScripts" : 
-	[
-		"/home/ruby/Documents/Coding/PicoProj/NPLua/build/_deps/picotool-build/enc_bootloader_mbedtls/cmake_install.cmake"
-	],
-	"Parallel" : false
-}
