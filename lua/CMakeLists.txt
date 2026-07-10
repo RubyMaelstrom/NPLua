@@ -1,6 +1,4 @@
 # lua/CMakeLists.txt
-cmake_minimum_required(VERSION 3.13)
-
 add_library(lua STATIC
     # Add your Lua source files here (from official lua tarball)
     # For example (Lua 5.4.x):
@@ -16,3 +14,5 @@ add_library(lua STATIC
 target_include_directories(lua PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
+
+target_compile_features(lua PUBLIC c_std_11)

@@ -2,11 +2,13 @@
 #include "luaEmbed.h"
 #include "gpio.h"
 
+#include <math.h>
+#include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
+#include <stdint.h>
 
-//#include "telnet.h"
-#include "core.h"
+#include "nplua_config.h"
+#include "telnet.h"
 #include "pico/time.h"
 #include "pico/cyw43_arch.h"
 
@@ -17,12 +19,58 @@
 
 static lua_State *luaState = NULL;
 
+typedef struct LuaAllocator {
+    size_t used;
+} LuaAllocator;
+
+static LuaAllocator luaAllocatorState;
+
+_Static_assert(NPLUA_LUA_HEAP_LIMIT >= 32768,
+               "NPLUA_LUA_HEAP_LIMIT must be at least 32768 bytes");
+
+static void luaOutputLine(const char *text);
+
+static int luaPanic(lua_State *L) {
+    const char *message = lua_tostring(L, -1);
+    luaOutputLine(message ? message : "Unprotected Lua error");
+    return 0;
+}
+
+static void *luaAllocator(void *userData, void *ptr, size_t oldSize,
+                          size_t newSize) {
+    LuaAllocator *allocator = (LuaAllocator *)userData;
+
+    if (!ptr) {
+        oldSize = 0;
+    }
+
+    if (newSize == 0) {
+        free(ptr);
+        allocator->used = oldSize <= allocator->used
+            ? allocator->used - oldSize
+            : 0;
+        return NULL;
+    }
+
+    if (newSize > oldSize &&
+        newSize - oldSize > NPLUA_LUA_HEAP_LIMIT - allocator->used) {
+        return NULL;
+    }
+
+    void *newPtr = realloc(ptr, newSize);
+    if (!newPtr) {
+        return NULL;
+    }
+
+    allocator->used = allocator->used - oldSize + newSize;
+    return newPtr;
+}
+
 // Small helper: send output to telnet (and also to USB for debug)
 static void luaOutputLine(const char *text) {
     if (!text) text = "";
 
-    // Send to core0 via the IPC buffer
-    npluaEnqueueOutput(text);
+    telnetSendLine(text);
 
     // Also log to USB for debug
     printf("%s\n", text);
@@ -36,10 +84,6 @@ static int luaNpluaPrint(lua_State *L) {
         return 0;
     }
 
-    char buffer[256];
-    buffer[0] = '\0';
-    size_t bufLen = 0;
-
     for (int i = 1; i <= top; i++) {
         size_t len;
         const char *s = luaL_tolstring(L, i, &len); // converts to string, leaves result on stack
@@ -49,34 +93,30 @@ static int luaNpluaPrint(lua_State *L) {
             len = 0;
         }
 
-        // Add a space between arguments
-        if (i > 1 && bufLen < sizeof(buffer) - 1) {
-            buffer[bufLen++] = ' ';
-            buffer[bufLen] = '\0';
+        if (i > 1) {
+            telnetSendBytes("\t", 1);
+            putchar('\t');
         }
 
-        // Append s in chunks if needed
-        size_t remaining = sizeof(buffer) - 1 - bufLen;
-        if (len > remaining) {
-            len = remaining;
+        if (len > 0) {
+            telnetSendBytes(s, len);
+            (void)fwrite(s, 1, len, stdout);
         }
-        memcpy(&buffer[bufLen], s, len);
-        bufLen += len;
-        buffer[bufLen] = '\0';
 
         lua_pop(L, 1); // pop the string from luaL_tolstring
-        if (bufLen >= sizeof(buffer) - 1) {
-            break;
-        }
     }
 
-    luaOutputLine(buffer);
+    telnetSendBytes("\r\n", 2);
+    putchar('\n');
     return 0;
 }
 
 // sleep(seconds)
 static int luaNpluaSleep(lua_State *L) {
     double secs = luaL_checknumber(L, 1);
+    if (!isfinite(secs)) {
+        return luaL_argerror(L, 1, "finite number expected");
+    }
     if (secs < 0) {
         secs = 0;
     }
@@ -86,8 +126,8 @@ static int luaNpluaSleep(lua_State *L) {
     if (msDouble < 0) {
         msDouble = 0;
     }
-    if (msDouble > 4294967295.0) {
-        msDouble = 4294967295.0;
+    if (msDouble > UINT32_MAX) {
+        msDouble = UINT32_MAX;
     }
 
     uint32_t ms = (uint32_t)(msDouble + 0.5);
@@ -105,7 +145,7 @@ static int luaNpluaLed(lua_State *L) {
 static int luaOsClock(lua_State *L) {
     // seconds since boot as a Lua number
     absolute_time_t now = get_absolute_time();
-    double secs = to_ms_since_boot(now) / 1000.0;
+    double secs = to_us_since_boot(now) / 1000000.0;
     lua_pushnumber(L, secs);
     return 1;
 }
@@ -120,11 +160,12 @@ static int luaOsUnsupported(lua_State *L) {
 void luaInit(void) {
     if (luaState) return;
 
-    luaState = luaL_newstate();
+    luaState = lua_newstate(luaAllocator, &luaAllocatorState);
     if (!luaState) {
         printf("luaInit: failed to create lua_State\n");
         return;
     }
+    lua_atpanic(luaState, luaPanic);
 
     // Open only the core libs we actually want
     luaL_requiref(luaState, "_G", luaopen_base, 1);          lua_pop(luaState, 1);
@@ -197,18 +238,19 @@ void luaRunChunk(const char *code, size_t length) {
         const char *err = lua_tostring(luaState, -1);
         luaOutputLine(err ? err : "Unknown Lua load error");
         lua_pop(luaState, 1); // pop error
+        lua_gc(luaState, LUA_GCCOLLECT, 0);
         return;
     }
 
     // Call the chunk
-    status = lua_pcall(luaState, 0, LUA_MULTRET, 0);
+    status = lua_pcall(luaState, 0, 0, 0);
     if (status != LUA_OK) {
         const char *err = lua_tostring(luaState, -1);
         luaOutputLine(err ? err : "Unknown Lua runtime error");
         lua_pop(luaState, 1);
+        lua_gc(luaState, LUA_GCCOLLECT, 0);
         return;
     }
 
-    // If we reach here, code ran without error. Any print() calls should have
-    // gone through luaNpluaPrint -> telnetSend already.
+    lua_gc(luaState, LUA_GCCOLLECT, 0);
 }

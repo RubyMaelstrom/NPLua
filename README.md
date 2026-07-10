@@ -2,20 +2,55 @@
 
 Have you ever wanted to write scripts for the Raspberry Pi Pico 2W in Lua instead of the already excellent options of Python, C, or assembly? No? Well, here's your chance anyway!
 
-NPLua is a Lua interpreter specifically for the 2W because the user utilizes a telnet connection to input Lua scripts for the Pico to run. This greatly simplifies things, as re-programming the device can be performed from across the room, across the network, or even across the world if you enjoy living dangerously and find a way to expose your Pico's port 23 to the internet.
+NPLua is a Lua interpreter for the Pico 2 W with a Telnet console for uploading and running Lua scripts over the network. The console supports both IPv4 and IPv6.
+
+> [!WARNING]
+> Telnet is unencrypted and NPLua does not authenticate clients. Keep the console on a trusted network; do not expose its port directly to the Internet.
 
 ### Installation
 
-If you've flashed a Pi Pico before, the initial installation of NPLua is very simple.
+NPLua targets Raspberry Pi Pico SDK 2.3.0 or newer and defaults to the `pico2_w` board.
 
 #### 1 - Network information
-Change the WIFI_SSID and WIFI_PASSWORD in CMakeLists.txt to your wifi SSID and password. This will be compiled as part of the program, and the Pi Pico 2W will automatically connect to your network once flashed and powered on.
+
+Copy the local configuration template and edit it:
+
+```sh
+cp nplua_user.cmake.example nplua_user.cmake
+```
+
+`nplua_user.cmake` is ignored by Git. Wi-Fi credentials are still embedded in the resulting firmware, so treat built UF2/ELF files as sensitive.
 
 #### 2 - Compile
-NPLua requires the Pico SDK, and it is recommended to update the Lua folder to the newest version of Lua for maximum compatibility with the language. Once you have those installed, just build it as usual. Please consult your Pi Pico's documentation for information on how to compile C programs for the Pico 2W, as there's no secret sauce here.
+
+If `PICO_SDK_PATH` points to an installed SDK, NPLua uses it. Otherwise CMake automatically fetches the pinned SDK release:
+
+```sh
+cmake -S . -B build
+cmake --build build --parallel
+```
+
+The default `MinSizeRel` profile optimizes for the Pico's flash envelope. Pass
+`-DCMAKE_BUILD_TYPE=RelWithDebInfo` when source-level debugging is more useful
+than minimum firmware size.
+
+Configuration can also be supplied directly:
+
+```sh
+cmake -S . -B build \
+  -DNPLUA_WIFI_SSID="network-name" \
+  -DNPLUA_WIFI_PASSWORD="network-password"
+```
+
+When changing SDK versions, use a fresh build directory rather than reusing an old CMake cache.
 
 #### 3 - Flash the Result to Your Pi
-Hold the flash button down on the Pi, plug it in via USB, mount it, then drag/copy over the nplua.uf2 file that resulted from your build. The Pi will disconnect and reboot, then automatically connect to the network and set up the telnet server on port 23. Check your router for the Pi's IP address and type `telnet <ip> 23` into your terminal to connect, or use whatever telnet software you're most comfortable with to connect on port 23.
+
+Hold BOOTSEL while connecting the Pico over USB, then copy `build/nplua.uf2` to the `RPI-RP2` volume. After reboot, connect to the configured port (23 by default):
+
+```sh
+telnet <ipv4-or-ipv6-address> 23
+```
 
 ### Using NPLua
 Once you've got NPLua up and running, actually programming the Pico is simple! Type `lua` once connected via telnet to initialize input mode. Then you can either type in the Lua script manually (standard syntax applies) or copy/paste Lua programs over. Once you're finished writing/pasting your program, on a new line type `:done` and the program will immediately run, as long as there are no errors in your code.
@@ -29,7 +64,7 @@ As previously mentioned, there's also a `reboot` command, which will restart the
 ### Compatibility
 The Pi Pico 2W is a great little device, but it doesn't have an operating system. Thus, standard Lua functions like `os.execute` and `os.exit` will not function in NPLua. Most other standard functions are supported. Try things out! That's one of the fun things about NPLua, you can play around with things without a bunch of reflashing of the hardware. There are also a couple of custom features implemented. `led(bool)` will turn the led on (true) or off (false). `sleep(number)` will initiate a sleep state for the entered number of seconds.
 
-There's also a full suite of GPIO functions. `gpio.setMode(pin, number)` will initialize the pin as input or output (0 for input, 1 for output). `gpio.write(pin, bool)` will turn a particular pin on or off. `gpio.read(pin, bool)` will, you guessed it, read if a pin is on or off. `gpio.toggle(pin)` will toggle the state of a pin.
+There's also a full suite of GPIO functions. `gpio.setMode(pin, number)` will initialize the pin as input or output (0 for input, 1 for output). `gpio.write(pin, bool)` will turn a particular pin on or off. `gpio.read(pin)` reads whether a pin is on or off. `gpio.toggle(pin)` toggles the state of a pin. NPLua permits the user-accessible Pico 2 W GPIOs 0-22 and 26-28.
 
 ### Bugs
 Have you found a bug in NPLua? I'm not surprised, I'm sure there are plenty! Let me know, and I'll try to fix it.

@@ -1,22 +1,19 @@
 // console.c
 #include "console.h"
-#include "luaEmbed.h"
 #include "telnet.h"
 #include "hardware/watchdog.h"
-#include "pico/stdlib.h"
 #include "core.h"
 
 #include <string.h>
-#include <stdio.h>
 
-#define LUA_BUF_SIZE 65538
+#define LUA_BUF_SIZE (NPLUA_MAX_CHUNK_SIZE + 1u)
 
 typedef enum {
     ConsoleModeCommand,
     ConsoleModeLuaUpload
 } ConsoleMode;
 
-static ConsoleMode consoleMode = ConsoleModeCommand;
+static volatile ConsoleMode consoleMode = ConsoleModeCommand;
 static char luaBuf[LUA_BUF_SIZE];
 static size_t luaLen = 0;
 
@@ -52,6 +49,11 @@ const char *consoleGetPrompt(void) {
 }
 
 static void startLuaUpload(void) {
+    if (npluaIsLuaRunning()) {
+        consoleWrite("Lua is already running; wait for it to finish.\r\n");
+        return;
+    }
+
     consoleMode = ConsoleModeLuaUpload;
     luaLen = 0;
     consoleWrite("Entering Lua upload mode. End with :done on its own line.\r\n");
@@ -87,11 +89,19 @@ static void finishLuaUpload(void) {
 
     luaBuf[luaLen] = '\0';
 
+    if (luaLen == 0) {
+        consoleWrite("Lua chunk is empty; nothing to run.\r\n");
+        consoleMode = ConsoleModeCommand;
+        return;
+    }
+
     if (consolePrintf) {
         consolePrintf("Running Lua chunk (%u bytes)...\r\n", (unsigned)luaLen);
     }
 
-    npluaQueueChunk(luaBuf, luaLen);
+    if (!npluaQueueChunk(luaBuf, luaLen)) {
+        consoleWrite("Unable to queue Lua chunk; another job is active.\r\n");
+    }
 
     consoleMode = ConsoleModeCommand;
     luaLen = 0;
@@ -109,6 +119,7 @@ static void handleCommandLine(const char *line) {
         consoleWrite("  lua    - enter multi-line Lua upload mode, end with :done\r\n");
         consoleWrite("  help   - show this help\r\n");
         consoleWrite("  quit   - close the telnet connection\r\n");
+        consoleWrite("  reboot - restart the Pico\r\n");
         return;
     }
 
@@ -122,9 +133,9 @@ static void handleCommandLine(const char *line) {
     if (strcmp(line, "reboot") == 0 || strcmp(line, ":reboot") == 0) {
         consoleWrite("Rebooting...\r\n");
         telnetCloseActive();
-        sleep_ms(200);
-        watchdog_reboot(0,0,0);
-    }     
+        watchdog_reboot(0, 0, 200);
+        return;
+    }
 
     if (consolePrintf) {
         consolePrintf("Unknown command: %s\r\n", line);

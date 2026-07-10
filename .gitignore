@@ -1,0 +1,9 @@
+/build*/
+/nplua_user.cmake
+/.cache/
+/compile_commands.json
+*.bin
+*.elf
+*.hex
+*.map
+*.uf2

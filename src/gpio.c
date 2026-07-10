@@ -4,13 +4,27 @@
 #include "lua.h"
 #include "lauxlib.h"
 
+static bool isUserGpio(lua_Integer pin) {
+    // GPIOs 23-25 and 29 have board-level functions on Pico 2 W. The pins
+    // available on the headers are 0-22 and 26-28.
+    return (pin >= 0 && pin <= 22) || (pin >= 26 && pin <= 28);
+}
+
+static int checkUserGpio(lua_State *L, int argument) {
+    lua_Integer pin = luaL_checkinteger(L, argument);
+    if (!isUserGpio(pin)) {
+        return luaL_error(L, "invalid GPIO pin: " LUA_INTEGER_FMT, pin);
+    }
+    return (int)pin;
+}
+
 // gpio.setMode(pin, dir)
 static int luaGpioSetMode(lua_State *L) {
-    int pin = luaL_checkinteger(L, 1);
-    int dir = luaL_checkinteger(L, 2); // gpio.INPUT or gpio.OUTPUT
+    int pin = checkUserGpio(L, 1);
+    lua_Integer dir = luaL_checkinteger(L, 2); // gpio.INPUT or gpio.OUTPUT
 
-    if (pin < 0 || pin > 29) { // crude safety, you can refine per board
-        return luaL_error(L, "invalid GPIO pin: %d", pin);
+    if (dir != 0 && dir != 1) {
+        return luaL_argerror(L, 2, "gpio.INPUT or gpio.OUTPUT expected");
     }
 
     gpio_init(pin);
@@ -21,12 +35,8 @@ static int luaGpioSetMode(lua_State *L) {
 
 // gpio.write(pin, value)
 static int luaGpioWrite(lua_State *L) {
-    int pin   = luaL_checkinteger(L, 1);
+    int pin   = checkUserGpio(L, 1);
     int value = lua_toboolean(L, 2) ? 1 : 0;
-
-    if (pin < 0 || pin > 29) {
-        return luaL_error(L, "invalid GPIO pin: %d", pin);
-    }
 
     gpio_put(pin, value);
     return 0;
@@ -34,11 +44,7 @@ static int luaGpioWrite(lua_State *L) {
 
 // gpio.read(pin) -> boolean
 static int luaGpioRead(lua_State *L) {
-    int pin = luaL_checkinteger(L, 1);
-
-    if (pin < 0 || pin > 29) {
-        return luaL_error(L, "invalid GPIO pin: %d", pin);
-    }
+    int pin = checkUserGpio(L, 1);
 
     int value = gpio_get(pin);
     lua_pushboolean(L, value ? 1 : 0);
@@ -47,11 +53,7 @@ static int luaGpioRead(lua_State *L) {
 
 // gpio.toggle(pin)
 static int luaGpioToggle(lua_State *L) {
-    int pin = luaL_checkinteger(L, 1);
-
-    if (pin < 0 || pin > 29) {
-        return luaL_error(L, "invalid GPIO pin: %d", pin);
-    }
+    int pin = checkUserGpio(L, 1);
 
     bool value = gpio_get(pin);
     gpio_put(pin, !value);

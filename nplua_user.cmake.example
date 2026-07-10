@@ -1,0 +1,8 @@
+# Copy this file to nplua_user.cmake and edit the local copy.
+# nplua_user.cmake is ignored by Git.
+
+set(NPLUA_WIFI_SSID "YourWifiSSID")
+set(NPLUA_WIFI_PASSWORD "YourWifiPassword")
+set(NPLUA_WIFI_COUNTRY "CYW43_COUNTRY_GERMANY")
+set(NPLUA_WIFI_AUTH "CYW43_AUTH_WPA2_MIXED_PSK")
+set(NPLUA_TELNET_PORT 23)

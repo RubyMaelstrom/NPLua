@@ -23,11 +23,20 @@
 
 // IP versions
 #define LWIP_IPV4                       1
-#define LWIP_IPV6                       0
+#define LWIP_IPV6                       1
+#define LWIP_IPV6_AUTOCONFIG            1
+#define LWIP_IPV6_MLD                   1
+
+// Keep the IPv6 neighbour-discovery tables modest on the Pico.
+#define LWIP_ND6_NUM_NEIGHBORS          4
+#define LWIP_ND6_NUM_DESTINATIONS       4
+#define LWIP_ND6_NUM_PREFIXES           2
+#define LWIP_ND6_NUM_ROUTERS            2
+#define MEMP_NUM_ND6_QUEUE              4
 
 // Memory & buffers
 #define MEM_ALIGNMENT                   4
-#define MEM_SIZE                        6000
+#define MEM_SIZE                        (16 * 1024)
 
 #define MEMP_NUM_PBUF                   16
 #define MEMP_NUM_TCP_PCB                8
